@@ -148,7 +148,7 @@ class Primitive extends Component {
       <span className="prop-type" style={ style }>{ type }</span> { required && <span style={{ color: "red" }}>*</span>}
       { format && <span className="prop-format">(${format})</span>}
       {
-        description && <div style={ propStyle }><Markdown options={{html: true, typographer: true, linkify: true, linkTarget: "_blank"}} source={ description } /></div>
+        description && <div className="description"  style={ propStyle }><Markdown options={{html: true, typographer: true, linkify: true, linkTarget: "_blank"}} source={ description } /></div>
       }
       {
         properties.size ? properties.entrySeq().map( ( [ key, v ] ) => key !== "description" && <span key={`${key}-${v}`} style={ propStyle }>

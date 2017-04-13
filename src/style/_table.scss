@@ -92,6 +92,12 @@ table
         @include text_body();
     }
 
+    .description {
+        p {
+            font-size: 12px;
+        }
+    }
+    
     input[type=text]
     {
         width: 100%;

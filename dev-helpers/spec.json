@@ -1,0 +1,2553 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "MMS Public API",
+    "description": "API for MMS",
+    "version": "0.1.0"
+  },
+  "host": "api.3dprinting-mms.com",
+  "basePath": "/api",
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "definitions": {
+    "BaseModel": {
+      "type": "object",
+      "properties": {
+        "factory_id": {
+          "$ref": "#/definitions/FactoryId"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "dateTime",
+          "example": "1985-04-12T23:20:50.520Z"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "dateTime",
+          "example": "1985-04-12T23:20:50.520Z"
+        }
+      }
+    },
+    "FactoryId": {
+      "type": "string",
+      "example": "example-factory"
+    },
+    "Metadata": {
+      "type": "object",
+      "description": "You can use this parameter to attach key-value data",
+      "example": {
+        "our_system_id": 1,
+        "quotation_id": "A001"
+      }
+    },
+    "Address": {
+      "type": "object",
+      "required": [
+        "country",
+        "area",
+        "city",
+        "address1"
+      ],
+      "properties": {
+        "first_name": {
+          "type": "string",
+          "example": "Keisuke"
+        },
+        "last_name": {
+          "type": "string",
+          "example": "Oohashi"
+        },
+        "company_name": {
+          "type": "string",
+          "example": "Kabuku Inc."
+        },
+        "country": {
+          "type": "string",
+          "example": "日本"
+        },
+        "area": {
+          "type": "string",
+          "example": "東京都"
+        },
+        "city": {
+          "type": "string",
+          "example": "千代田区"
+        },
+        "address1": {
+          "type": "string",
+          "example": "1丁目1番"
+        },
+        "address2": {
+          "type": "string",
+          "example": "カブクビル"
+        },
+        "address3": {
+          "type": "string"
+        },
+        "postal_code": {
+          "type": "string",
+          "example": "100-8111"
+        },
+        "phone": {
+          "type": "string",
+          "example": "00-0000-0000"
+        }
+      }
+    },
+    "User": {
+      "type": "object",
+      "required": [
+        "email"
+      ],
+      "properties": {
+        "first_name": {
+          "type": "string",
+          "example": "Keisuke"
+        },
+        "family_name": {
+          "type": "string",
+          "example": "Oohashi"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        }
+      }
+    },
+    "BuildDirection": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "default": 0,
+          "maximum": 360,
+          "minimum": -360
+        },
+        "y": {
+          "type": "number",
+          "default": 0,
+          "maximum": 360,
+          "minimum": -360
+        },
+        "z": {
+          "type": "number",
+          "default": 0,
+          "maximum": 360,
+          "minimum": -360
+        },
+        "order": {
+          "type": "string",
+          "default": "xyz",
+          "example": "xyz"
+        }
+      }
+    },
+    "File": {
+      "type": "object",
+      "required": [
+        "data",
+        "filename"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "A name of this data. You can set difference name from the filename. If this property does not take, System use filename "
+        },
+        "data": {
+          "type": "string",
+          "description": "An URL of this data. This property can set `https://*` `http://*` and `gs://`. Note please contact us, if you want to use `gs://` protocol.",
+          "example": "https://example.com/path/to/file.stl"
+        },
+        "filename": {
+          "type": "string",
+          "description": "A filename of this file. Filename should include extension, and exclude path."
+        },
+        "datasize": {
+          "type": "number"
+        },
+        "comment": {
+          "type": "string",
+          "description": "A description or comment for this file"
+        }
+      }
+    },
+    "QuotationData": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseModel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of the quotation"
+            },
+            "customer_id": {
+              "type": "number",
+              "example": 1,
+              "description": "A requester ID"
+            },
+            "customer": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/User"
+                },
+                {
+                  "$ref": "#/definitions/BaseModel"
+                },
+                {
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1,
+                      "description": "A requester ID"
+                    }
+                  }
+                }
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "QUOTING",
+                "QUOTED",
+                "CANCEL"
+              ]
+            },
+            "shipping_groups": {
+              "type": "array",
+              "description": "Delivery Groups",
+              "items": {
+                "$ref": "#/definitions/QuotationShippingGroupData"
+              }
+            },
+            "quotation_name": {
+              "type": "string",
+              "description": "A quotation name for this RFQ. This name may change by the factory side.",
+              "example": "ID: 001 Phone Case Mold"
+            },
+            "comment": {
+              "type": "string",
+              "description": "An order detail or contents of request for this RFQ.",
+              "example": "Tolerance: +1\nColor: Black"
+            },
+            "reply_comment": {
+              "type": "string",
+              "description": "Reply Comment from the factory for this RFQ"
+            },
+            "quotation_address": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Address"
+                },
+                {
+                  "description": "A Quotation Address."
+                }
+              ]
+            },
+            "billing_address": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Address"
+                },
+                {
+                  "description": "A Billing Address."
+                }
+              ]
+            },
+            "item_amount": {
+              "type": "number",
+              "description": "Items Amount of this quotation. This property will added status is QUOTED",
+              "example": 100000
+            },
+            "shipping_amount": {
+              "type": "number",
+              "description": "Shipping Amount of this quotation. This property will added status is QUOTED",
+              "example": 1000
+            },
+            "total_tax": {
+              "type": "number",
+              "description": "Tax of this quotation. This property will added status is QUOTED",
+              "example": 8080
+            },
+            "total_amount": {
+              "type": "number",
+              "description": "Total Amount of this quotation, it include tax, shipping amount, item amount. This property will added status is QUOTED",
+              "example": 109080
+            },
+            "metadata": {
+              "$ref": "#/definitions/Metadata"
+            }
+          }
+        }
+      ]
+    },
+    "QuotationShippingGroupData": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseModel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of the Shipping Group"
+            },
+            "shipping_address": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Address"
+                },
+                {
+                  "description": "A shipping address."
+                }
+              ]
+            },
+            "priority": {
+              "type": "boolean",
+              "description": "If set `true`, this shipping and order mark as The Express Shipping/Order."
+            },
+            "desired_delivery_date": {
+              "type": "string",
+              "description": "A desired delivery date for this shipping.",
+              "format": "dateTime",
+              "example": "1985-04-12T23:20:50.520Z"
+            },
+            "shipping_cost": {
+              "type": "number",
+              "description": "Shipping Cost",
+              "example": 1000
+            },
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/QuotationItemData"
+                },
+                {
+                  "description": "Quotation Items"
+                }
+              ]
+            },
+            "metadata": {
+              "$ref": "#/definitions/Metadata"
+            }
+          }
+        }
+      ]
+    },
+    "QuotationItemData": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseModel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of the quotation item"
+            },
+            "quotation_item_name": {
+              "type": "string",
+              "description": "A quotation item name for this RFQ. This name may change by the factory side.",
+              "example": "Parts ID: 001 Phone Case Mold Parts No. 1"
+            },
+            "comment": {
+              "type": "string",
+              "description": "An order item detail or contents of request for this RFQ Item.",
+              "example": "Tolerance: +1\nColor: Black"
+            },
+            "quantity": {
+              "type": "number",
+              "description": "The Quantity"
+            },
+            "material_id": {
+              "type": "number",
+              "description": "A Material ID."
+            },
+            "machine_id": {
+              "type": "number",
+              "description": "A Machine ID."
+            },
+            "mode_id": {
+              "type": "number",
+              "description": "A Machine Mode ID."
+            },
+            "post_process_id": {
+              "type": "number",
+              "description": "A Post Process ID."
+            },
+            "file": {
+              "$ref": "#/definitions/FileData"
+            },
+            "build_direction": {
+              "$ref": "#/definitions/BuildDirection"
+            },
+            "metadata": {
+              "$ref": "#/definitions/Metadata"
+            },
+            "unit_price": {
+              "type": "number",
+              "description": "Unit Price of this quotation item"
+            },
+            "total_price": {
+              "type": "number",
+              "description": "Total Price of this quotation item"
+            }
+          }
+        }
+      ]
+    },
+    "FileData": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseModel"
+        },
+        {
+          "$ref": "#/definitions/File"
+        },
+        {
+          "type": "object",
+          "description": "A file data.",
+          "properties": {
+            "id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of the file"
+            },
+            "unit": {
+              "type": "string",
+              "description": "an unit for this data",
+              "enum": [
+                "mm",
+                "cm",
+                "inc"
+              ]
+            },
+            "images": {
+              "type": "array",
+              "description": "Attachment images for this file. Note: MMS will create rendering images for this file if we can create.",
+              "items": {
+                "type": "string"
+              }
+            },
+            "attachments": {
+              "type": "array",
+              "description": "Attachment files for this file.",
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/BaseModel"
+                  },
+                  {
+                    "$ref": "#/definitions/File"
+                  },
+                  {
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 1,
+                        "description": "ID of the attachment file"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "metadata": {
+              "$ref": "#/definitions/Metadata"
+            }
+          }
+        }
+      ]
+    },
+    "OrderData": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseModel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of the order",
+              "readOnly": true
+            },
+            "quotation_id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of this order's quotation",
+              "readOnly": true
+            },
+            "customer_id": {
+              "type": "number",
+              "example": 1,
+              "description": "A requester ID",
+              "readOnly": true
+            },
+            "customer": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/User"
+                },
+                {
+                  "$ref": "#/definitions/BaseModel"
+                },
+                {
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1,
+                      "description": "A requester ID",
+                      "readOnly": true
+                    }
+                  },
+                  "readOnly": true
+                }
+              ]
+            },
+            "quotation_name": {
+              "type": "string",
+              "description": "A quotation name for this order's quotation. This name may change by the factory side.",
+              "example": "ID: 001 Phone Case Mold",
+              "readOnly": true
+            },
+            "quotation_comment": {
+              "type": "string",
+              "description": "An order detail or contents of request for this Order's quotation.",
+              "example": "Tolerance: +1\nColor: Black",
+              "readOnly": true
+            },
+            "reply_comment": {
+              "type": "string",
+              "description": "Reply Comment from the factory for this Order's ",
+              "readOnly": true
+            },
+            "quotation_address": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Address"
+                },
+                {
+                  "description": "A Quotation Address."
+                }
+              ]
+            },
+            "billing_address": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Address"
+                },
+                {
+                  "description": "A Billing Address."
+                }
+              ]
+            },
+            "item_amount": {
+              "type": "number",
+              "description": "Items Amount of this quotation. This property will added status is QUOTED",
+              "example": 100000,
+              "readOnly": true
+            },
+            "shipping_amount": {
+              "type": "number",
+              "description": "Shipping Amount of this quotation. This property will added status is QUOTED",
+              "example": 1000,
+              "readOnly": true
+            },
+            "total_tax": {
+              "type": "number",
+              "description": "Tax of this quotation. This property will added status is QUOTED",
+              "example": 8080,
+              "readOnly": true
+            },
+            "total_amount": {
+              "type": "number",
+              "description": "Total Amount of this quotation, it include tax, shipping amount, item amount. This property will added status is QUOTED",
+              "example": 109080,
+              "readOnly": true
+            },
+            "metadata": {
+              "$ref": "#/definitions/Metadata"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "ORDERED",
+                "DONE"
+              ]
+            },
+            "shipping_groups": {
+              "type": "array",
+              "description": "Delivery Groups",
+              "items": {
+                "$ref": "#/definitions/OrderShippingGroupData"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "OrderShippingGroupData": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseModel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of the Shipping Group",
+              "readOnly": true
+            },
+            "shipping_address": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Address"
+                },
+                {
+                  "description": "A shipping address."
+                }
+              ]
+            },
+            "priority": {
+              "type": "boolean",
+              "description": "If set `true`, this shipping and order mark as The Express Shipping/Order."
+            },
+            "desired_delivery_date": {
+              "type": "string",
+              "description": "A desired delivery date for this shipping.",
+              "format": "dateTime",
+              "example": "1985-04-12T23:20:50.520Z"
+            },
+            "estimated_shipping_date": {
+              "type": "string",
+              "description": "A estimated shipping date for this shipping.",
+              "format": "dateTime",
+              "example": "1985-04-12T23:20:50.520Z"
+            },
+            "shipping_date": {
+              "type": "string",
+              "description": "A shipping date for this shipping.",
+              "format": "dateTime",
+              "example": "1985-04-12T23:20:50.520Z"
+            },
+            "shipping_cost": {
+              "type": "number",
+              "description": "Shipping Cost",
+              "example": 1000,
+              "readOnly": true
+            },
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/OrderItemData"
+                },
+                {
+                  "description": "Order Items"
+                }
+              ]
+            },
+            "metadata": {
+              "$ref": "#/definitions/Metadata"
+            }
+          }
+        }
+      ]
+    },
+    "OrderItemData": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseModel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of the orders item",
+              "readOnly": true
+            },
+            "quotation_item_name": {
+              "type": "string",
+              "description": "A quotation item name for this RFQ. This name may change by the factory side.",
+              "example": "Parts ID: 001 Phone Case Mold Parts No. 1",
+              "readOnly": true
+            },
+            "comment": {
+              "type": "string",
+              "description": "An order item detail or contents of request for this RFQ Item.",
+              "example": "Tolerance: +1\nColor: Black",
+              "readOnly": true
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "WAIT_PRE_PROCESS",
+                "RECEIVED_ORDER",
+                "PRE_PRODUCTION",
+                "IN_PRODUCTION",
+                "READY_TO_SHIPPING",
+                "SHIPPING"
+              ]
+            },
+            "quantity": {
+              "type": "number",
+              "description": "The Quantity"
+            },
+            "material_id": {
+              "type": "number",
+              "description": "A Material ID."
+            },
+            "machine_id": {
+              "type": "number",
+              "description": "A Machine ID."
+            },
+            "mode_id": {
+              "type": "number",
+              "description": "A Machine Mode ID."
+            },
+            "post_process_id": {
+              "type": "number",
+              "description": "A Post Process ID."
+            },
+            "file": {
+              "$ref": "#/definitions/FileData"
+            },
+            "build_direction": {
+              "$ref": "#/definitions/BuildDirection"
+            },
+            "metadata": {
+              "$ref": "#/definitions/Metadata"
+            },
+            "unit_price": {
+              "type": "number",
+              "description": "Unit Price of this quotation item",
+              "readOnly": true
+            },
+            "total_price": {
+              "type": "number",
+              "description": "Total Price of this quotation item",
+              "readOnly": true
+            }
+          }
+        }
+      ]
+    },
+    "EventType": {
+      "type": "string",
+      "description": "All of Event Type",
+      "enum": [
+        "rfq.received",
+        "quotation.status.updated",
+        "quotation.updated",
+        "order.received",
+        "order.status.updated",
+        "order.updated"
+      ]
+    },
+    "EventData": {
+      "type": "object",
+      "description": "Event Data. Hash containing data associated with the event.\nthis data type is decided by event type.\n\n** Event Types **\n\n| Event Type | Description | ResponseData |\n| rfq.received | Occurs whenever new request for quotation has created. | QuotationData |\n| quotation.updated | Occurs whenever a quotation has updated. | QuotationData |\n| quotation.status.updated | Occurs whenever a quotation status has updated. | QuotationData |\n| order.received | Occurs whenever new order has received | OrderData |\n| order.status.updated | Occurs whenever an order status has updated | OrderData |\n| order.updated | Occurs whenever an order has updated  | OrderData |\n",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/EventType"
+        },
+        "factory_id": {
+          "$ref": "#/definitions/FactoryId"
+        },
+        "data": {
+          "type": "object",
+          "description": "Hash containing data associated with the event.\nthis data type is decided by event type.\n\n** Event Types **\n\n| Event Type | Description | ResponseData |\n| rfq.received | Occurs whenever new request for quotation has created. | QuotationData |\n| quotation.updated | Occurs whenever a quotation has updated. | QuotationData |\n| quotation.status.updated | Occurs whenever a quotation status has updated. | QuotationData |\n| order.received | Occurs whenever new order has received | OrderData |\n| order.status.updated | Occurs whenever an order status has updated | OrderData |\n| order.updated | Occurs whenever an order has updated  | OrderData |\n",
+          "example": {
+            "$ref": "#/definitions/OrderData"
+          }
+        },
+        "webhook_id": {
+          "type": "number",
+          "example": 1,
+          "description": "ID of the webhook",
+          "readOnly": true
+        },
+        "created_at": {
+          "type": "string",
+          "format": "dateTime",
+          "example": "1985-04-12T23:20:50.520Z",
+          "readOnly": true,
+          "description": "Date of that this event was happening.\n"
+        }
+      }
+    },
+    "WebhookData": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseModel"
+        },
+        {
+          "type": "object",
+          "required": [
+            "url"
+          ],
+          "properties": {
+            "id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of the webhook",
+              "readOnly": true
+            },
+            "url": {
+              "type": "string",
+              "example": "http://example.com/callback",
+              "description": "Callback URL of this webhook.\n"
+            },
+            "includes": {
+              "type": "array",
+              "description": "Names of event you want to subscribe to.\nWhen this parameter is not set, Webhook will call callback all of event.\n",
+              "example": [
+                "quotation.status.updated",
+                "order.status.updated"
+              ],
+              "items": {
+                "$ref": "#/definitions/EventType"
+              }
+            },
+            "max_retry_count": {
+              "type": "number",
+              "description": "Number of retry. Webhook always retry calling until this count when callback url is not return 2xx-3xx response. Defalut value: 5.\n",
+              "default": 5
+            },
+            "metadata": {
+              "$ref": "#/definitions/Metadata"
+            }
+          }
+        }
+      ]
+    },
+    "WebhookEventData": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseModel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of the webhook history",
+              "readOnly": true
+            },
+            "webhook_id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of the webhook",
+              "readOnly": true
+            },
+            "url": {
+              "type": "string",
+              "example": "http://example.com/callback",
+              "description": "Callbacked URL of this webhook history.\n",
+              "readOnly": true
+            },
+            "last_callbacked_date": {
+              "type": "string",
+              "format": "dateTime",
+              "example": "1985-04-12T23:20:50.520Z",
+              "readOnly": true,
+              "description": "Date of callbacked\n"
+            },
+            "event_date": {
+              "type": "string",
+              "format": "dateTime",
+              "example": "1985-04-12T23:20:50.520Z",
+              "readOnly": true,
+              "description": "Date of that this event was happening.\n"
+            },
+            "type": {
+              "$ref": "#/definitions/EventType"
+            },
+            "request_body": {
+              "description": "Request Body of this callback.\n",
+              "$ref": "#/definitions/EventData"
+            },
+            "retry_count": {
+              "type": "number",
+              "description": "retry count of this callback.\n"
+            }
+          }
+        }
+      ]
+    },
+    "WebhookHistoryData": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseModel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of the webhook history",
+              "readOnly": true
+            },
+            "webhook_id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of the webhook",
+              "readOnly": true
+            },
+            "webhook_event_id": {
+              "type": "number",
+              "example": 1,
+              "description": "ID of the webhook event",
+              "readOnly": true
+            },
+            "url": {
+              "type": "string",
+              "example": "http://example.com/callback",
+              "description": "Callbacked URL of this webhook history.\n",
+              "readOnly": true
+            },
+            "callbacked_date": {
+              "type": "string",
+              "format": "dateTime",
+              "example": "1985-04-12T23:20:50.520Z",
+              "readOnly": true,
+              "description": "Date of callbacked\n"
+            },
+            "event_date": {
+              "type": "string",
+              "format": "dateTime",
+              "example": "1985-04-12T23:20:50.520Z",
+              "readOnly": true,
+              "description": "Date of that this event was happening.\n"
+            },
+            "event_name": {
+              "$ref": "#/definitions/EventType"
+            },
+            "request_body": {
+              "type": "object",
+              "description": "Request Body of this callback.\n",
+              "$ref": "#/definitions/EventData"
+            },
+            "response_status_code": {
+              "type": "number",
+              "description": "Response status code of this callback.\n"
+            },
+            "response_body": {
+              "type": "string",
+              "description": "Response body of this callback.\n"
+            },
+            "retry_count": {
+              "type": "number",
+              "description": "retry count of this callback.\n"
+            }
+          }
+        }
+      ]
+    },
+    "QuotationCreationReq": {
+      "type": "object",
+      "required": [
+        "shipping_groups",
+        "quotation_address"
+      ],
+      "properties": {
+        "customer_id": {
+          "type": "number",
+          "example": 1,
+          "description": "A requester ID, if Requester already have ID, you have to set `customer_id`."
+        },
+        "customer": {
+          "$ref": "#/definitions/User"
+        },
+        "shipping_groups": {
+          "type": "array",
+          "description": "Delivery Groups",
+          "items": {
+            "$ref": "#/definitions/QuotationCreationShippingGroupReq"
+          }
+        },
+        "quotation_name": {
+          "type": "string",
+          "description": "A quotation name for this RFQ. This name may change by the factory side.",
+          "example": "ID: 001 Phone Case Mold"
+        },
+        "comment": {
+          "type": "string",
+          "description": "An order detail or contents of request for this RFQ.",
+          "example": "Tolerance: +1\nColor: Black"
+        },
+        "quotation_address": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Address"
+            },
+            {
+              "description": "A Quotation Address. When this property does not set and `billing_address` is set, `billing_address` is used for this property"
+            }
+          ]
+        },
+        "billing_address": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Address"
+            },
+            {
+              "description": "A Billing Address. When this property does not set and `quotation_address` is set, `quotation_address` is used for this property"
+            }
+          ]
+        },
+        "metadata": {
+          "$ref": "#/definitions/Metadata"
+        }
+      }
+    },
+    "QuotationCreationShippingGroupReq": {
+      "type": "object",
+      "required": [
+        "shipping_address",
+        "items"
+      ],
+      "properties": {
+        "shipping_address": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Address"
+            },
+            {
+              "description": "A shipping address."
+            }
+          ]
+        },
+        "priority": {
+          "type": "boolean",
+          "description": "If set `true`, this shipping and order mark as The Express Shipping/Order."
+        },
+        "desired_delivery_date": {
+          "type": "string",
+          "description": "A desired delivery date for this shipping.",
+          "format": "dateTime",
+          "example": "1985-04-12T23:20:50.520Z"
+        },
+        "items": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/QuotationCreationItemReq"
+            },
+            {
+              "description": "Quotation Items"
+            }
+          ]
+        },
+        "metadata": {
+          "$ref": "#/definitions/Metadata"
+        }
+      }
+    },
+    "QuotationCreationItemReq": {
+      "type": "object",
+      "required": [
+        "quantity",
+        "file"
+      ],
+      "properties": {
+        "quotation_item_name": {
+          "type": "string",
+          "description": "A quotation item name for this RFQ. This name may change by the factory side.",
+          "example": "Parts ID: 001 Phone Case Mold Parts No. 1"
+        },
+        "comment": {
+          "type": "string",
+          "description": "An order item detail or contents of request for this RFQ Item.",
+          "example": "Tolerance: +1\nColor: Black"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The Quantity"
+        },
+        "material_id": {
+          "type": "number",
+          "description": "A Material ID."
+        },
+        "machine_id": {
+          "type": "number",
+          "description": "A Machine ID."
+        },
+        "mode_id": {
+          "type": "number",
+          "description": "A Machine Mode ID."
+        },
+        "post_process_id": {
+          "type": "number",
+          "description": "A Post Process ID."
+        },
+        "file": {
+          "$ref": "#/definitions/QuotationCreationFileItemReq"
+        },
+        "build_direction": {
+          "$ref": "#/definitions/BuildDirection"
+        },
+        "metadata": {
+          "$ref": "#/definitions/Metadata"
+        }
+      }
+    },
+    "QuotationCreationFileItemReq": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/File"
+        },
+        {
+          "type": "object",
+          "description": "A file data for this quotation item. ",
+          "required": [
+            "unit"
+          ],
+          "properties": {
+            "unit": {
+              "type": "string",
+              "description": "an unit for this data",
+              "enum": [
+                "mm",
+                "cm",
+                "inc"
+              ]
+            },
+            "images": {
+              "type": "array",
+              "description": "Attachment images for this file. Note: MMS will create rendering images for this file if we can create.",
+              "items": {
+                "type": "string"
+              }
+            },
+            "attachments": {
+              "type": "array",
+              "description": "Attachment files for this file.",
+              "items": {
+                "$ref": "#/definitions/File"
+              }
+            },
+            "metadata": {
+              "$ref": "#/definitions/Metadata"
+            }
+          }
+        }
+      ]
+    },
+    "OrderCreationReq": {
+      "type": "object",
+      "required": [
+        "quotation_id"
+      ],
+      "properties": {
+        "quotation_id": {
+          "type": "number",
+          "description": "ID of Quotation"
+        },
+        "quotation_item_ids": {
+          "type": "array",
+          "description": "ID array of Quotation Item. This parameter can use only factory are supported part of order",
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "WebhookCreationReq": {
+      "type": "object",
+      "required": [
+        "url"
+      ],
+      "properties": {
+        "url": {
+          "type": "string",
+          "example": "http://example.com/callback",
+          "description": "Callback URL of this webhook.\n"
+        },
+        "includes": {
+          "type": "array",
+          "description": "Names of event you want to subscribe to.\nWhen this parameter is not set, Webhook will call callback all of event.\n",
+          "example": [
+            "quotation.status.updated",
+            "order.status.updated"
+          ],
+          "items": {
+            "$ref": "#/definitions/EventType"
+          }
+        },
+        "max_retry_count": {
+          "type": "number",
+          "description": "Number of retry. Webhook always retry calling until this count when callback url is not return 2xx-3xx response. Defalut value: 5.\n",
+          "default": 5
+        },
+        "metadata": {
+          "$ref": "#/definitions/Metadata"
+        }
+      }
+    }
+  },
+  "parameters": {
+    "numericIdPath": {
+      "name": "id",
+      "description": "ID of the object",
+      "in": "path",
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    },
+    "factoryIdPath": {
+      "name": "factory_id",
+      "description": "ID of the factory",
+      "in": "path",
+      "type": "string",
+      "required": true,
+      "minLength": 3,
+      "pattern": "^[0-9a-z-]+$"
+    },
+    "numericId": {
+      "name": "id",
+      "description": "ID of the object",
+      "in": "query",
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    },
+    "factoryId": {
+      "name": "factory_id",
+      "description": "ID of the factory",
+      "in": "query",
+      "type": "string",
+      "required": true,
+      "minLength": 3,
+      "pattern": "^[0-9a-z-]+$"
+    },
+    "numericIds": {
+      "name": "ids",
+      "description": "ID of the object to fetch",
+      "in": "query",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[1-9][0-9]*$"
+      },
+      "collectionFormat": "multi"
+    },
+    "limit": {
+      "name": "limit",
+      "description": "response size limit of this request. default is 100",
+      "in": "query",
+      "default": 100,
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    }
+  },
+  "paths": {
+    "/v1/public/factories/{factory_id}/rfqs": {
+      "parameters": [
+        {
+          "$ref": "#/parameters/factoryIdPath"
+        }
+      ],
+      "post": {
+        "description": "Create new Request for Quotation to this factory.",
+        "tags": [
+          "Quotations"
+        ],
+        "operationId": "createRFQ",
+        "parameters": [
+          {
+            "$ref": "#/parameters/factoryIdPath"
+          },
+          {
+            "name": "quotation_creation_request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/QuotationCreationReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success",
+            "schema": {
+              "$ref": "#/definitions/QuotationData"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Bad Request"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "invalid_request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Permission Denied"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "permission_denied"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Not Found"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "not_found"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Service Unavailable"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "service_unavailable"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/factories/{factory_id}/quotations": {
+      "parameters": [
+        {
+          "$ref": "#/parameters/factoryIdPath"
+        }
+      ],
+      "get": {
+        "description": "Get quotations in this factory.",
+        "tags": [
+          "Quotations"
+        ],
+        "operationId": "getQuotations",
+        "parameters": [
+          {
+            "$ref": "#/parameters/factoryIdPath"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/numericIds"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/QuotationData"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Bad Request"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "invalid_request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Permission Denied"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "permission_denied"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Not Found"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "not_found"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Service Unavailable"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "service_unavailable"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/factories/{factory_id}/quotations/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/parameters/factoryIdPath"
+        },
+        {
+          "$ref": "#/parameters/numericIdPath"
+        }
+      ],
+      "get": {
+        "description": "Get a quotation for this factory.",
+        "tags": [
+          "Quotations"
+        ],
+        "operationId": "getQuotationsById",
+        "parameters": [
+          {
+            "$ref": "#/parameters/factoryIdPath"
+          },
+          {
+            "$ref": "#/parameters/numericIdPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success",
+            "schema": {
+              "$ref": "#/definitions/QuotationData"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Bad Request"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "invalid_request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Permission Denied"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "permission_denied"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Not Found"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "not_found"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Service Unavailable"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "service_unavailable"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/factories/{factory_id}/orders": {
+      "parameters": [
+        {
+          "$ref": "#/parameters/factoryIdPath"
+        }
+      ],
+      "get": {
+        "description": "Get Orders in this factory.",
+        "tags": [
+          "Orders"
+        ],
+        "operationId": "getOrders",
+        "parameters": [
+          {
+            "$ref": "#/parameters/factoryIdPath"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/numericIds"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/OrderData"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Bad Request"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "invalid_request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Permission Denied"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "permission_denied"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Not Found"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "not_found"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Service Unavailable"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "service_unavailable"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Make new Order to this factory.",
+        "tags": [
+          "Orders"
+        ],
+        "operationId": "createOrder",
+        "parameters": [
+          {
+            "$ref": "#/parameters/factoryIdPath"
+          },
+          {
+            "name": "order_creation_request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrderCreationReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success",
+            "schema": {
+              "$ref": "#/definitions/OrderData"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Bad Request"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "invalid_request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Permission Denied"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "permission_denied"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Not Found"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "not_found"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This quotation is already Ordered or Canceled. You can't order this one.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "already done"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "conflict"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "This quotation is expired. You can't order this one.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "expired this quotation"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "resource_is_expired"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Service Unavailable"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "service_unavailable"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/factories/{factory_id}/orders/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/parameters/factoryIdPath"
+        },
+        {
+          "$ref": "#/parameters/numericIdPath"
+        }
+      ],
+      "get": {
+        "description": "Get a order for this factory.",
+        "tags": [
+          "Orders"
+        ],
+        "operationId": "getOrdersById",
+        "parameters": [
+          {
+            "$ref": "#/parameters/factoryIdPath"
+          },
+          {
+            "$ref": "#/parameters/numericIdPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success",
+            "schema": {
+              "$ref": "#/definitions/OrderData"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Bad Request"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "invalid_request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Permission Denied"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "permission_denied"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Not Found"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "not_found"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Service Unavailable"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "service_unavailable"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/factories/{factory_id}/webhooks": {
+      "parameters": [
+        {
+          "$ref": "#/parameters/factoryIdPath"
+        }
+      ],
+      "get": {
+        "description": "Get Webhooks in this factory.",
+        "tags": [
+          "Webhooks"
+        ],
+        "operationId": "getWebhooks",
+        "parameters": [
+          {
+            "$ref": "#/parameters/factoryIdPath"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/numericIds"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/WebhookData"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Bad Request"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "invalid_request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Permission Denied"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "permission_denied"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Not Found"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "not_found"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Service Unavailable"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "service_unavailable"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Register new webhooks",
+        "tags": [
+          "Webhooks"
+        ],
+        "operationId": "createWebhook",
+        "parameters": [
+          {
+            "$ref": "#/parameters/factoryIdPath"
+          },
+          {
+            "name": "webhook_creation_request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/WebhookCreationReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success",
+            "schema": {
+              "$ref": "#/definitions/WebhookData"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Bad Request"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "invalid_request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Permission Denied"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "permission_denied"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Not Found"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "not_found"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Service Unavailable"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "service_unavailable"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/factories/{factory_id}/webhooks/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/parameters/factoryIdPath"
+        }
+      ],
+      "get": {
+        "description": "Get Webhook in this factory.",
+        "tags": [
+          "Webhooks"
+        ],
+        "operationId": "getWebhooksById",
+        "parameters": [
+          {
+            "$ref": "#/parameters/factoryIdPath"
+          },
+          {
+            "$ref": "#/parameters/numericIdPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success",
+            "schema": {
+              "$ref": "#/definitions/WebhookData"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Bad Request"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "invalid_request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Permission Denied"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "permission_denied"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Not Found"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "not_found"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Service Unavailable"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "service_unavailable"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete a webhook",
+        "tags": [
+          "Webhooks"
+        ],
+        "operationId": "deleteWebhook",
+        "parameters": [
+          {
+            "$ref": "#/parameters/factoryIdPath"
+          },
+          {
+            "$ref": "#/parameters/numericIdPath"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "success"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Bad Request"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "invalid_request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Permission Denied"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "permission_denied"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Not Found"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "not_found"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Service Unavailable"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "service_unavailable"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/factories/{factory_id}/webhooks/history": {
+      "parameters": [
+        {
+          "$ref": "#/parameters/factoryIdPath"
+        }
+      ],
+      "get": {
+        "description": "Get Webhook History.\n\n## EventData\nHash containing data associated with the event.\nthis data type is decided by event type.\n\n**Event Types**\n\n| Event Type | Description | ResponseData |\n| ----------- | ---------- | ------------ |\n| rfq.received | Occurs whenever new request for quotation has created. | QuotationData |\n| quotation.updated | Occurs whenever a quotation has updated. | QuotationData |\n| quotation.status.updated | Occurs whenever a quotation status has updated. | QuotationData |\n| order.received | Occurs whenever new order has received | OrderData |\n| order.status.updated | Occurs whenever an order status has updated | OrderData |\n| order.updated | Occurs whenever an order has updated  | OrderData |\n",
+        "tags": [
+          "Webhooks"
+        ],
+        "operationId": "getWebhooksHistories",
+        "parameters": [
+          {
+            "$ref": "#/parameters/factoryIdPath"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/WebhookHistoryData"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Bad Request"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "invalid_request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Permission Denied"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "permission_denied"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Not Found"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "not_found"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Service Unavailable"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "service_unavailable"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "gae_header": {
+      "type": "apiKey",
+      "name": "X-Appengine-Inbound-Appid",
+      "description": "Authorize application by X-Appengine-Inbound-Appid header.\nGoogle App Engine Frontend Service will remove this header if client application set this header own.\nThis header automactually is added by Google App Engine.\n",
+      "in": "header"
+    },
+    "api_key": {
+      "type": "apiKey",
+      "name": "access_token",
+      "in": "header",
+      "description": "API Key auth. You can create this key by your factory setting page.\n**Caution** All of your factory data can be retrieved, managed and updated if that api key use, So you must not publish or share.\n"
+    }
+  },
+  "security": [
+    {
+      "api_key": []
+    },
+    {
+      "gae_header": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Webhooks",
+      "description": "Hash containing data associated with the event.\nthis data type is decided by event type.\n\n** Event Types **\n\n| Event Type | Description | ResponseData |\n| ----------- | ---------- | ------------ |\n| rfq.received | Occurs whenever new request for quotation has created. | QuotationData |\n| quotation.updated | Occurs whenever a quotation has updated. | QuotationData |\n| quotation.status.updated | Occurs whenever a quotation status has updated. | QuotationData |\n| order.received | Occurs whenever new order has received | OrderData |\n| order.status.updated | Occurs whenever an order status has updated | OrderData |\n| order.updated | Occurs whenever an order has updated  | OrderData |\n"
+    }
+  ]
+}

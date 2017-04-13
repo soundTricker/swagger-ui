@@ -32,7 +32,7 @@ export default class Operations extends React.Component {
 
     const Operation = getComponent("operation")
     const Collapse = getComponent("Collapse")
-
+    const Markdown = getComponent( "Markdown" )
     let showSummary = layoutSelectors.showSummary()
 
     return (
@@ -50,13 +50,6 @@ export default class Operations extends React.Component {
 
                   <h4 className={!tagDescription ? "opblock-tag no-desc" : "opblock-tag" }>
                     <span onClick={() => layoutActions.show(isShownKey, !showTag)}>{tag}</span>
-
-                    { !tagDescription ? null :
-                        <small onClick={() => layoutActions.show(isShownKey, !showTag)} >
-                          { tagDescription }
-                        </small>
-                    }
-
                     <button className="expand-operation" title="Expand operation" onClick={() => layoutActions.show(isShownKey, !showTag)}>
                       <svg className="arrow" width="20" height="20">
                         <use xlinkHref={showTag ? "#large-arrow-down" : "#large-arrow"} />
@@ -65,7 +58,12 @@ export default class Operations extends React.Component {
                   </h4>
 
                   <Collapse isOpened={showTag}>
+                    { tagDescription && <div className="opblock-description-wrapper">
+                    <Markdown options={{html: true, typographer: true, linkify: true, linkTarget: "_blank"}} source={ tagDescription } />
+                    </div>
+                    }
                     {
+
                       operations.map( op => {
 
                         const isShownKey = ["operations", op.get("id"), tag]
@@ -77,7 +75,8 @@ export default class Operations extends React.Component {
                         const response = specSelectors.responseFor(op.get("path"), op.get("method"))
                         const request = specSelectors.requestFor(op.get("path"), op.get("method"))
 
-                        return <Operation
+                        return (
+                          <Operation
                           {...op.toObject()}
 
                           isShownKey={isShownKey}
@@ -99,7 +98,7 @@ export default class Operations extends React.Component {
 
                           getComponent={ getComponent }
                           fn={fn}
-                        />
+                        />)
                       }).toArray()
                     }
                   </Collapse>

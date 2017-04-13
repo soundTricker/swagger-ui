@@ -13,7 +13,6 @@ export default class Models extends Component {
     let { specSelectors, getComponent, layoutSelectors, layoutActions } = this.props
     let definitions = specSelectors.definitions()
     let showModels = layoutSelectors.isShown("models", true)
-
     const Model = getComponent("model")
     const Collapse = getComponent("Collapse")
 
